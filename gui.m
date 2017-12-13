@@ -181,22 +181,17 @@ function plotData(handles)
   cla reset;
   data = handles.data;
   m = size(data);
-  %x1 = 0:1:(m(2)-1);
-  %x1 = x1.*(1/handles.Fs);
-  x1 = 0:0.01:50;
-  data = sin(x1);
+  x1 = 0:1:(m(2)-1);
+  x1 = x1.*(1/handles.Fs);
+  %x1 = 0:0.01:50;
+  %data = sin(x1);
   set(handles.axes1_title,'String','Time Domain');
   plot(handles.axes1,x1,data);
   
   %plot FFT
   set(handles.axes2_title,'String','Frequency Domain');
-  fdata = fft(data);
-%  fdata_mag = abs(fdata);
-%  N = length(data);
-  %freqHz = (0:1:length(fdata_mag)-1)*handles.Fs/N;
-%  freqHz = (0:1:length(fdata_mag)-1)*handles.Fs/N;
-%  plot(handles.axes2,freqHz,fdata_mag);
-  f = (0:length(fdata)-1)*handles.Fs/length(fdata);
+  fdata = fftshift(fft(data));
+  f = (-length(fdata)/2:(length(fdata)-1)/2)*handles.Fs/length(fdata);
   plot(handles.axes2,f,abs(fdata))
 
   set(handles.start_frequency_edit, 'min', min(f));
@@ -210,13 +205,13 @@ function plotData(handles)
 
 function replotFrequency(handles)
   set(handles.axes2_title,'String','Frequency Domain');
-  fdata = fft(handles.data);
-  f = (0:length(fdata)-1)*handles.Fs/length(fdata);
+  fdata = fftshift(fft(handles.data));
+  f = (-length(fdata)/2:(length(fdata)-1)/2)*handles.Fs/length(fdata);
   plot(handles.axes2,f,abs(fdata))
-  start = get(handles.start_frequency_edit,'Value');
-  stop = get(handles.stop_frequency_edit,'Value');
+  [d,start] = min(abs(f-get(handles.start_frequency_edit,'Value')));
+  [d,stop] = min(abs(f-get(handles.stop_frequency_edit,'Value')));
   newF = f(start:stop);
-  newFdata = fdata(start:stop)
+  newFdata = fdata(start:stop);
   
   %TODO switch for WINDOW FUNCTIONS
   plot(handles.axes2,newF,abs(newFdata));
