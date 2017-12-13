@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 05-Dec-2017 15:33:24
+% Last Modified by GUIDE v2.5 13-Dec-2017 12:20:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -199,10 +199,10 @@ function plotData(handles)
   f = (0:length(fdata)-1)*handles.Fs/length(fdata);
   plot(handles.axes2,f,abs(fdata))
 
-  set(handles.frequency_edit, 'min', min(f));
-  set(handles.frequency_edit, 'max', max(f));
-  set(handles.frequency_edit, 'Value',min(f));
-  set(handles.frequency_field,'String',min(f));
+  set(handles.start_frequency_edit, 'min', min(f));
+  set(handles.start_frequency_edit, 'max', max(f));
+  set(handles.start_frequency_edit, 'Value',min(f));
+  set(handles.start_frequency_field,'String',min(f));
   set(handles.stop_frequency_edit, 'min', min(f));
   set(handles.stop_frequency_edit, 'max', max(f));
   set(handles.stop_frequency_edit, 'Value', max(f));
@@ -213,7 +213,7 @@ function replotFrequency(handles)
   fdata = fft(handles.data);
   f = (0:length(fdata)-1)*handles.Fs/length(fdata);
   plot(handles.axes2,f,abs(fdata))
-  start = get(handles.frequency_edit,'Value');
+  start = get(handles.start_frequency_edit,'Value');
   stop = get(handles.stop_frequency_edit,'Value');
   newF = f(start:stop);
   newFdata = fdata(start:stop)
@@ -267,7 +267,7 @@ toSave(timeRow_index,2) = col2;
 toSave(handles.notesIndex,2) = num2cell(get(handles.options_popup,'value'));
 toSave(handles.notesIndex,3) = num2cell(get(handles.windowFunction_popup,'value'));
 toSave(handles.notesIndex,4) = num2cell(get(handles.noiseReduction_popup,'value'));
-toSave(handles.notesIndex,5) = num2cell(get(handles.frequency_edit,'value'));
+toSave(handles.notesIndex,5) = num2cell(get(handles.start_frequency_edit,'value'));
 toSave(handles.notesIndex,6) = num2cell(get(handles.stop_frequency_edit,'value'));
 %saves the data to the excel file
 xlswrite(fullName,toSave);
@@ -280,13 +280,13 @@ function options_popup_Callback(hObject, eventdata, handles)
 
 
 
-function frequency_edit_Callback(hObject, eventdata, handles)
-% hObject    handle to frequency_edit (see GCBO)
+function start_frequency_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to start_frequency_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of frequency_edit as text
-%        str2double(get(hObject,'String')) returns contents of frequency_edit as a double
+% Hints: get(hObject,'String') returns contents of start_frequency_edit as text
+%        str2double(get(hObject,'String')) returns contents of start_frequency_edit as a double
 freq = get(hObject,'value');
 set(handles.start_frequency_field,'String',freq);
 replotFrequency(handles);
@@ -399,21 +399,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes during object creation, after setting all properties.
-function start_frequency_field_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to start_frequency_field (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over start_frequency_field.
-function start_frequency_field_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to start_frequency_field (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
 % --- Executes on slider movement.
 function stop_frequency_edit_Callback(hObject, eventdata, handles)
 % hObject    handle to stop_frequency_edit (see GCBO)
@@ -458,4 +443,21 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 set(hObject,'String',{'FFT','Smoothing'});
 
-function frequency_edit_CreateFcn(hObject, eventdata, handles)
+% --- Executes during object creation, after setting all properties.
+function start_frequency_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to start_frequency_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over start_frequency_field.
+function start_frequency_field_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to start_frequency_field (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
