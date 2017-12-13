@@ -181,12 +181,12 @@ function plotData(handles)
   cla reset;
   data = handles.data;
   m = size(data);
-  x1 = 0:1:(m(2)-1);
-  x1 = x1.*(1/handles.Fs);
+  %x1 = 0:1:(m(2)-1);
+  %x1 = x1.*(1/handles.Fs);
+  x1 = 0:0.01:50;
   data = sin(x1);
   set(handles.axes1_title,'String','Time Domain');
-  plot(handles.axes1,x1,data,'x');
-  xlabel(handles.axes1,'T[s]');
+  plot(handles.axes1,x1,data);
   
   %plot FFT
   set(handles.axes2_title,'String','Frequency Domain');
