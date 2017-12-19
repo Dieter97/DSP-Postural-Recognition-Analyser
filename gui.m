@@ -184,8 +184,9 @@ function plotData(handles)
   m = size(data);
   %x1 = 0:1:(m(2)-1);
   %x1 = x1.*(1/handles.Fs);
-  x1 = 0:1:150;x1 = x1.*(1/handles.Fs);
-  data = sin(2*pi*50*x1) + sin(2*pi*15*x1);
+  x1 = 0:1:500;
+  x1 = x1.*(1/handles.Fs);
+  data = sin(2*pi*30*x1) + sin(2*pi*3*x1);
   set(handles.axes1_title,'String','Time Domain');
   plot(handles.axes1,x1,data);
   grid(handles.axes1,'on');
@@ -197,7 +198,7 @@ function plotData(handles)
   n = length(data);                         
   fshift = (-n/2:n/2-1)*(handles.Fs/n);
   yshift = fftshift(y);
-  plot(handles.axes2,fshift,abs(yshift));
+  plot(handles.axes2,fshift,abs(yshift./(length(data)./2)));
   %plot(handles.axes2,f,abs(y));
   grid(handles.axes2,'on');
 
