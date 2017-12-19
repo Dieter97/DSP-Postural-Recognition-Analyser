@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 13-Dec-2017 12:20:33
+% Last Modified by GUIDE v2.5 19-Dec-2017 22:20:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -186,7 +186,7 @@ function initPlot(hObject,handles)
   %x1 = x1.*(1/handles.Fs);
 
   x1 = 0:1:1500;x1 = x1.*(1/handles.Fs);
-  data = sin(2*pi*50*x1) + sin(2*pi*24*x1);
+  data = sin(2*pi*1*x1) + sin(2*pi*15*x1);
   handles.data = data;
   handles.x1 = x1;
 
@@ -209,7 +209,6 @@ function initPlot(hObject,handles)
   replotFrequency(handles);
   
 function replotFrequency(handles)
-  
   %calculate frequency domain
   set(handles.axes2_title,'String','Frequency Domain');
   y = fft(handles.data); 
@@ -223,18 +222,19 @@ function replotFrequency(handles)
   
   cla reset
   %plot time domain
-  hold on
   set(handles.axes1_title,'String','Time Domain');
   plot(handles.axes1,handles.x1,handles.data);
-  grid(handles.axes1,'on');
   
   %plot the inverse fft of the selected data
-  iNewData = ifftshift(ifft(newFdata));
-  zero = zeros(1,n);
-  iNewData(numel(zero)) = 0;
-  plot(handles.axes1,handles.x1,iNewData);
-  hold off
-  
+  if get(handles.filterPlot, 'Value') == 1
+      iNewData = ifft(ifftshift(newFdata));
+      m = length(iNewData);
+      numberOfCopies = floor((n-m)/m)+1;
+      %iNewData = iNewData(mod(0:n-1, numel(iNewData)) + 1);
+	  x2 = handles.x1(start:stop);
+      plot(handles.axes1,x2,iNewData);
+  end;
+  grid(handles.axes1,'on');
   %TODO switch for WINDOW FUNCTIONS
   plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
   grid(handles.axes2,'on');
@@ -482,3 +482,13 @@ function start_frequency_field_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+
+
+% --- Executes on button press in filterPlot.
+function filterPlot_Callback(hObject, eventdata, handles)
+% hObject    handle to filterPlot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of filterPlot
+replotFrequency(handles);
