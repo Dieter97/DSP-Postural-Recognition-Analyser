@@ -184,12 +184,12 @@ function initPlot(hObject,handles)
   m = size(data);
   %x1 = 0:1:(m(2)-1);
   %x1 = x1.*(1/handles.Fs);
+
   x1 = 0:1:1500;x1 = x1.*(1/handles.Fs);
   data = sin(2*pi*50*x1) + sin(2*pi*24*x1);
   handles.data = data;
-
   handles.x1 = x1;
-  
+
   %calculate borders
   y = fft(data);     
   n = length(data);                         
@@ -236,7 +236,7 @@ function replotFrequency(handles)
   hold off
   
   %TODO switch for WINDOW FUNCTIONS
-  plot(handles.axes2,newF,abs(newFdata));
+  plot(handles.axes2,fshift,abs(yshift./(length(handles.data)./2)));
   grid(handles.axes2,'on');
 
 % --- Executes on button press in save_Btn.
