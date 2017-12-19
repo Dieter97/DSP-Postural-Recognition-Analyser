@@ -230,13 +230,13 @@ function replotFrequency(handles)
   
   %plot the inverse fft of the selected data
   iNewData = ifftshift(ifft(newFdata));
-  zero = zeros(n);
-  iNewData(numel(y)) = 0;
-  plot(handles.axes1,handles.x1(start:stop),iNewData);
+  zero = zeros(1,n);
+  iNewData(numel(zero)) = 0;
+  plot(handles.axes1,handles.x1,iNewData);
   hold off
   
   %TODO switch for WINDOW FUNCTIONS
-  plot(handles.axes2,fshift,abs(yshift./(length(handles.data)./2)));
+  plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
   grid(handles.axes2,'on');
 
 % --- Executes on button press in save_Btn.
