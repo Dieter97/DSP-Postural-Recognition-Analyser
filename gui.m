@@ -449,6 +449,9 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
 
+function start_frequency_field_CreateFcn(hObject, eventdata, handles)
+%do nothing
+
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
 % --- Otherwise, executes on mouse press in 5 pixel border or over start_frequency_field.
 function start_frequency_field_ButtonDownFcn(hObject, eventdata, handles)
