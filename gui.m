@@ -176,49 +176,64 @@ function load_Btn_Callback(hObject, eventdata, handles)
   % Save the handles
   guidata(hObject, handles);
   % plot the data
-  plotData(handles);
+  initPlot(hObject,handles);
 
-function plotData(handles)
+function initPlot(hObject,handles)
   cla reset;
   data = handles.data;
   m = size(data);
   %x1 = 0:1:(m(2)-1);
   %x1 = x1.*(1/handles.Fs);
-  x1 = 0:1:150;x1 = x1.*(1/handles.Fs);
-  data = sin(2*pi*50*x1) + sin(2*pi*15*x1);
-  set(handles.axes1_title,'String','Time Domain');
-  plot(handles.axes1,x1,data);
-  grid(handles.axes1,'on');
+  x1 = 0:1:1500;x1 = x1.*(1/handles.Fs);
+  data = sin(2*pi*50*x1) + sin(2*pi*24*x1);
+  handles.data = data;
+
+  handles.x1 = x1;
   
-  %plot FFT
-  set(handles.axes2_title,'String','Frequency Domain');
+  %calculate borders
   y = fft(data);     
-  f = (0:length(y)-1)*handles.Fs/length(y);
   n = length(data);                         
   fshift = (-n/2:n/2-1)*(handles.Fs/n);
-  yshift = fftshift(y);
-  plot(handles.axes2,fshift,abs(yshift));
-  %plot(handles.axes2,f,abs(y));
-  grid(handles.axes2,'on');
 
-  set(handles.start_frequency_edit, 'min', min(f));
+  set(handles.start_frequency_edit, 'min', min(fshift));
   set(handles.start_frequency_edit, 'max', 0);
-  set(handles.start_frequency_edit, 'Value',min(f));
-  set(handles.start_frequency_field,'String',min(f));
+  set(handles.start_frequency_edit, 'Value',min(fshift));
+  set(handles.start_frequency_field,'String',min(fshift));
   set(handles.stop_frequency_edit, 'min', 0);
-  set(handles.stop_frequency_edit, 'max', max(f));
-  set(handles.stop_frequency_edit, 'Value', max(f));
-  set(handles.stop_frequency_field,'String',max(f));
-
+  set(handles.stop_frequency_edit, 'max', max(fshift));
+  set(handles.stop_frequency_edit, 'Value', max(fshift));
+  set(handles.stop_frequency_field,'String',max(fshift));
+ % Save the handles
+  guidata(hObject, handles);
+  
+  replotFrequency(handles);
+  
 function replotFrequency(handles)
+  
+  %calculate frequency domain
   set(handles.axes2_title,'String','Frequency Domain');
-  fdata = fftshift(fft(handles.data));
-  f = (-length(fdata)/2:(length(fdata)-1)/2)*handles.Fs/length(fdata);
-  plot(handles.axes2,f,abs(fdata));
-  [d,start] = min(abs(f-get(handles.start_frequency_edit,'Value')));
-  [d,stop] = min(abs(f-get(handles.stop_frequency_edit,'Value')));
-  newF = f(start:stop);
-  newFdata = fdata(start:stop);
+  y = fft(handles.data); 
+  n = length(handles.data); 
+  fshift = (-n/2:n/2-1)*(handles.Fs/n);
+  yshift = fftshift(y);
+  [d,start] = min(abs(fshift-get(handles.start_frequency_edit,'Value')));
+  [d,stop] = min(abs(fshift-get(handles.stop_frequency_edit,'Value')));
+  newF = fshift(start:stop);
+  newFdata = yshift(start:stop);
+  
+  cla reset
+  %plot time domain
+  hold on
+  set(handles.axes1_title,'String','Time Domain');
+  plot(handles.axes1,handles.x1,handles.data);
+  grid(handles.axes1,'on');
+  
+  %plot the inverse fft of the selected data
+  iNewData = ifftshift(ifft(newFdata));
+  zero = zeros(n);
+  iNewData(numel(y)) = 0;
+  plot(handles.axes1,handles.x1(start:stop),iNewData);
+  hold off
   
   %TODO switch for WINDOW FUNCTIONS
   plot(handles.axes2,newF,abs(newFdata));
@@ -456,6 +471,9 @@ function start_frequency_edit_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
+
+function start_frequency_field_CreateFcn(hObject, eventdata, handles)
+%do nothing
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
 % --- Otherwise, executes on mouse press in 5 pixel border or over start_frequency_field.
