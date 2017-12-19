@@ -128,10 +128,11 @@ function load_Btn_Callback(hObject, eventdata, handles)
   % hObject    handle to load_Btn (see GCBO)
   % eventdata  reserved - to be defined in a future version of MATLAB
   % handles    structure with handles and user data (see GUIDATA)
-  filename = uigetfile('*.xlsx', 'Select an excel file');
+  [baseName, folder] = uigetfile('*.xlsx', 'Select an excel file');
+  fullFileName = fullfile(folder, baseName);
   % Open xlsx file and save data in num (only numbers), txt (only strings)
   % and raw (raw data)
-  [num,txt,raw] = xlsread(filename);
+  [num,txt,raw] = xlsread(fullFileName);
   handles.txt = txt;
   handles.raw = raw;
   notes_index = strfind(txt, 'Notes:');
@@ -156,18 +157,18 @@ function load_Btn_Callback(hObject, eventdata, handles)
   handles.window = num(row_index-2,3);
   handles.noise = num(row_index-2,4);
   if isnan(handles.method)
-      handles.method = 1
+      handles.method = 1;
   end;
   if isnan(handles.window)
-      handles.window = 1
+      handles.window = 1;
   end;
   if isnan(handles.noise)
-      handles.noise = 1
+      handles.noise = 1;
   end;
-  num = xlsread(filename,-1);
+  num = xlsread(fullFileName,-1);
   [m,n] = size(num);
   while n>1
-    num = xlsread(filename,-1);
+    num = xlsread(fullFileName,-1);
     [m,n] = size(num);
   end;
   handles.num = num;
@@ -181,24 +182,26 @@ function plotData(handles)
   cla reset;
   data = handles.data;
   m = size(data);
-  x1 = 0:1:(m(2)-1);
-  x1 = x1.*(1/handles.Fs);
-  %x1 = 0:0.01:50;
-  %data = sin(x1);
+  %x1 = 0:1:(m(2)-1);
+  %x1 = x1.*(1/handles.Fs);
+  x1 = 0:0.01:150;
+  data = sin(x1);
   set(handles.axes1_title,'String','Time Domain');
   plot(handles.axes1,x1,data);
+  grid(handles.axes1,'on');
   
   %plot FFT
   set(handles.axes2_title,'String','Frequency Domain');
-  fdata = fftshift(fft(data));
+  fdata = fftshift(fft(data)./(length(data)./2));
   f = (-length(fdata)/2:(length(fdata)-1)/2)*handles.Fs/length(fdata);
   plot(handles.axes2,f,abs(fdata))
+  grid(handles.axes2,'on');
 
   set(handles.start_frequency_edit, 'min', min(f));
-  set(handles.start_frequency_edit, 'max', max(f));
+  set(handles.start_frequency_edit, 'max', 0);
   set(handles.start_frequency_edit, 'Value',min(f));
   set(handles.start_frequency_field,'String',min(f));
-  set(handles.stop_frequency_edit, 'min', min(f));
+  set(handles.stop_frequency_edit, 'min', 0);
   set(handles.stop_frequency_edit, 'max', max(f));
   set(handles.stop_frequency_edit, 'Value', max(f));
   set(handles.stop_frequency_field,'String',max(f));
@@ -207,7 +210,7 @@ function replotFrequency(handles)
   set(handles.axes2_title,'String','Frequency Domain');
   fdata = fftshift(fft(handles.data));
   f = (-length(fdata)/2:(length(fdata)-1)/2)*handles.Fs/length(fdata);
-  plot(handles.axes2,f,abs(fdata))
+  plot(handles.axes2,f,abs(fdata));
   [d,start] = min(abs(f-get(handles.start_frequency_edit,'Value')));
   [d,stop] = min(abs(f-get(handles.stop_frequency_edit,'Value')));
   newF = f(start:stop);
@@ -215,6 +218,7 @@ function replotFrequency(handles)
   
   %TODO switch for WINDOW FUNCTIONS
   plot(handles.axes2,newF,abs(newFdata));
+  grid(handles.axes2,'on');
 
 % --- Executes on button press in save_Btn.
 function save_Btn_Callback(hObject, eventdata, handles)
@@ -448,9 +452,6 @@ function start_frequency_edit_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
-
-function start_frequency_field_CreateFcn(hObject, eventdata, handles)
-%do nothing
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
 % --- Otherwise, executes on mouse press in 5 pixel border or over start_frequency_field.
