@@ -178,13 +178,16 @@ function load_Btn_Callback(hObject, eventdata, handles)
   % plot the data
   initPlot(hObject,handles);
 
+%Calculates the time values, frequency values of the FFT plot and
+% initiliazes the sliders
 function initPlot(hObject,handles)
   cla reset;
   data = handles.data;
   m = size(data);
   %x1 = 0:1:(m(2)-1);
   %x1 = x1.*(1/handles.Fs);
-
+  
+  %data used for tests(sine)
   x1 = 0:1:1500;x1 = x1.*(1/handles.Fs);
   data = sin(2*pi*1*x1) + sin(2*pi*15*x1);
   handles.data = data;
@@ -360,7 +363,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 %sets the values of the window popup
-options = {'Boxcar','Sine','Hann','Blackmann','Hamming','Flattop'};
+options = {'Boxcar','Hann','Blackmann','Hamming','Bartlett'};
 set(hObject, 'String', options);
 
 % --- Executes during object creation, after setting all properties.
