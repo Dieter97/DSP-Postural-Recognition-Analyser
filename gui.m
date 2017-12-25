@@ -184,8 +184,8 @@ function initPlot(hObject,handles)
   cla reset;
   data = handles.data;
   m = size(data);
-  %x1 = 0:1:(m(2)-1);
-  %x1 = x1.*(1/handles.Fs);
+ % x1 = 0:1:(m(2)-1);
+%  x1 = x1.*(1/handles.Fs);
   
   %data used for tests(sine)
   x1 = 0:1:1500;x1 = x1.*(1/handles.Fs);
@@ -198,10 +198,10 @@ function initPlot(hObject,handles)
   n = length(data);                         
   fshift = (-n/2:n/2-1)*(handles.Fs/n);
 
-  set(handles.start_frequency_edit, 'min', min(fshift));
-  set(handles.start_frequency_edit, 'max', 0);
-  set(handles.start_frequency_edit, 'Value',min(fshift));
-  set(handles.start_frequency_field,'String',min(fshift));
+  set(handles.start_frequency_edit, 'min', 0);
+  set(handles.start_frequency_edit, 'max', max(fshift));
+  set(handles.start_frequency_edit, 'Value',max(fshift));
+  set(handles.start_frequency_field,'String',max(fshift));
   set(handles.stop_frequency_edit, 'min', 0);
   set(handles.stop_frequency_edit, 'max', max(fshift));
   set(handles.stop_frequency_edit, 'Value', max(fshift));
@@ -218,8 +218,8 @@ function replotFrequency(handles)
   n = length(handles.data); 
   fshift = (-n/2:n/2-1)*(handles.Fs/n);
   yshift = fftshift(y);
-  [d,start] = min(abs(fshift-get(handles.start_frequency_edit,'Value')));
-  [d,stop] = min(abs(fshift-get(handles.stop_frequency_edit,'Value')));
+  [d,start] = min(abs(fshift-(-get(handles.start_frequency_edit,'Value'))));
+  [d,stop] = min(abs(fshift-get(handles.start_frequency_edit,'Value')));
   newF = fshift(start:stop);
   newFdata = yshift(start:stop);
   
@@ -230,11 +230,13 @@ function replotFrequency(handles)
   
   %plot the inverse fft of the selected data
   if get(handles.filterPlot, 'Value') == 1
-      iNewData = ifft(ifftshift(newFdata));
+      [d,start2] = min(abs(fshift-0));
+	  newFdata2 = yshift(start2:stop);
+      iNewData = ifft(newFdata2);
       m = length(iNewData);
       numberOfCopies = floor((n-m)/m)+1;
       %iNewData = iNewData(mod(0:n-1, numel(iNewData)) + 1);
-	  x2 = handles.x1(start:stop);
+	  x2 = handles.x1(start2:stop);
       plot(handles.axes1,x2,iNewData);
   end;
   grid(handles.axes1,'on');
