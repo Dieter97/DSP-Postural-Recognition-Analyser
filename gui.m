@@ -184,8 +184,10 @@ function initPlot(hObject,handles)
   cla reset;
   data = handles.data;
   m = size(data);
- % x1 = 0:1:(m(2)-1);
-%  x1 = x1.*(1/handles.Fs);
+  x1 = 0:1:(m(2)-1);
+  x1 = x1.*(1/handles.Fs);
+  %data = data(mod(0:(m(2)*10)-1, numel(data)) + 1);
+  %x1 = x1(mod(0:(m(2)*10)-1, numel(x1)) + 1);
   
   %data used for tests(sine)
   x1 = 0:1:1500;x1 = x1.*(1/handles.Fs);
@@ -223,6 +225,37 @@ function replotFrequency(handles)
   newF = fshift(start:stop);
   newFdata = yshift(start:stop);
   
+  %TODO switch for WINDOW FUNCTIONS
+  windowFunction = get(handles.windowFunction_popup,'value');
+  switch windowFunction
+	case 1
+		%BOXCAR
+		nfft = 2^nextpow2(n);
+		box_data = handles.data.*rectwin(n);
+		box_fft = fft(box_data,nfft)/n;
+		% at all frequencies except zero and the Nyquist
+		mYdft = abs(box_fft);
+		mYdft = mYdft (1:nfft/2+1);
+		mYdft (2:end-1) = 2* mYdft(2:end-1);
+		f = handles.Fs/2*linspace(0,1,nfft/2+1);
+		plot(handles.axes2,f,mYdft);
+	case 2
+		%Hann
+		plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
+	case 3
+		%Blackmann
+		plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
+	case 4
+		%Hamming
+		plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
+	case 5
+		%Bartlett
+		plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
+	end;
+  
+  grid(handles.axes2,'on');
+  
+  
   cla reset
   %plot time domain
   set(handles.axes1_title,'String','Time Domain');
@@ -233,16 +266,13 @@ function replotFrequency(handles)
       [d,start2] = min(abs(fshift-0));
 	  newFdata2 = yshift(start2:stop);
       iNewData = ifft(newFdata2);
-      m = length(iNewData);
-      numberOfCopies = floor((n-m)/m)+1;
       %iNewData = iNewData(mod(0:n-1, numel(iNewData)) + 1);
 	  x2 = handles.x1(start2:stop);
       plot(handles.axes1,x2,iNewData);
   end;
   grid(handles.axes1,'on');
-  %TODO switch for WINDOW FUNCTIONS
-  plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
-  grid(handles.axes2,'on');
+
+
 
 % --- Executes on button press in save_Btn.
 function save_Btn_Callback(hObject, eventdata, handles)
