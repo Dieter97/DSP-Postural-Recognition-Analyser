@@ -167,7 +167,8 @@ function load_Btn_Callback(hObject, eventdata, handles)
   end;
   num = xlsread(fullFileName,-1);
   [m,n] = size(num);
-  while n>1
+  while n ~= 1
+    disp('Please select one column.');
     num = xlsread(fullFileName,-1);
     [m,n] = size(num);
   end;
@@ -216,42 +217,51 @@ function initPlot(hObject,handles)
 function replotFrequency(handles)
   %calculate frequency domain
   set(handles.axes2_title,'String','Frequency Domain');
-  y = fft(handles.data); 
-  n = length(handles.data); 
+  plot_data = handles.data;
+  
+  %TODO switch for WINDOW FUNCTIONS
+  windowFunction = get(handles.windowFunction_popup,'value');
+  switch windowFunction
+	case 1
+		% Normal (no window function)
+    case 2
+        %BOXCAR
+		%nfft = 2^nextpow2(n);
+		%box_data = handles.data.*rectwin(n);
+		%box_fft = fft(box_data,nfft)/n;
+		% at all frequencies except zero and the Nyquist
+		%mYdft = abs(box_fft);
+		%mYdft = mYdft (1:nfft/2+1);
+		%mYdft (2:end-1) = 2* mYdft(2:end-1);
+		%f = handles.Fs/2*linspace(0,1,nfft/2+1);
+		%plot(handles.axes2,f,mYdft);
+	case 3
+		%Hann
+        hann_data = hann(length(plot_data));
+        plot_data = hann_data.*plot_data;
+	case 4
+		%Blackmann
+        blackman_data = blackman(length(plot_data));
+        plot_data = blackman_data.*plot_data;
+	case 5
+		%Hamming
+        hamming_data = hamming(length(plot_data));
+        plot_data = hamming_data.*plot_data;
+	case 6
+		%Bartlett
+        bartlett_data = bartlett(length(plot_data));
+        plot_data = bartlett_data.*plot_data;
+  end
+    
+  y = fft(plot_data); 
+  n = length(plot_data); 
   fshift = (-n/2:n/2-1)*(handles.Fs/n);
   yshift = fftshift(y);
   [d,start] = min(abs(fshift-(-get(handles.start_frequency_edit,'Value'))));
   [d,stop] = min(abs(fshift-get(handles.start_frequency_edit,'Value')));
   newF = fshift(start:stop);
   newFdata = yshift(start:stop);
-  
-  %TODO switch for WINDOW FUNCTIONS
-  windowFunction = get(handles.windowFunction_popup,'value');
-  switch windowFunction
-	case 1
-		%BOXCAR
-		nfft = 2^nextpow2(n);
-		box_data = handles.data.*rectwin(n);
-		box_fft = fft(box_data,nfft)/n;
-		% at all frequencies except zero and the Nyquist
-		mYdft = abs(box_fft);
-		mYdft = mYdft (1:nfft/2+1);
-		mYdft (2:end-1) = 2* mYdft(2:end-1);
-		f = handles.Fs/2*linspace(0,1,nfft/2+1);
-		plot(handles.axes2,f,mYdft);
-	case 2
-		%Hann
-		plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
-	case 3
-		%Blackmann
-		plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
-	case 4
-		%Hamming
-		plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
-	case 5
-		%Bartlett
-		plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
-	end;
+  plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
   
   grid(handles.axes2,'on');
   
@@ -381,7 +391,8 @@ function windowFunction_popup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns windowFunction_popup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from windowFunction_popup
 val = get(hObject,'Value');
-disp(val);
+%disp(val);
+replotFrequency(handles);
 
 % --- Executes during object creation, after setting all properties.
 function windowFunction_popup_CreateFcn(hObject, eventdata, handles)
@@ -395,7 +406,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 %sets the values of the window popup
-options = {'Boxcar','Hann','Blackmann','Hamming','Bartlett'};
+options = {'None','Boxcar','Hann','Blackmann','Hamming','Bartlett'};
 set(hObject, 'String', options);
 
 % --- Executes during object creation, after setting all properties.
