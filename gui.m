@@ -186,21 +186,25 @@ function initPlot(hObject,handles)
   data = handles.data;
   m = size(data);
   x1 = 0:1:(m(2)-1);
+  %sets the right values on the time abcissa
   x1 = x1.*(1/handles.Fs);
   %data = data(mod(0:(m(2)*10)-1, numel(data)) + 1);
   %x1 = x1(mod(0:(m(2)*10)-1, numel(x1)) + 1);
   
   %data used for tests(sine)
-  x1 = 0:1:1500;x1 = x1.*(1/handles.Fs);
+  x1 = 0:1:1500;
+  x1 = x1.*(1/handles.Fs);
   data = sin(2*pi*1*x1) + sin(2*pi*15*x1);
   handles.data = data;
   handles.x1 = x1;
 
-  %calculate borders
+  %calculate fft
   y = fft(data);     
-  n = length(data);                         
+  n = length(data);   
+  %make sure that the spectrum is symmetrical around the zero point
   fshift = (-n/2:n/2-1)*(handles.Fs/n);
-
+  
+  %sets default settings to the options
   set(handles.start_frequency_edit, 'min', 0);
   set(handles.start_frequency_edit, 'max', max(fshift));
   set(handles.start_frequency_edit, 'Value',max(fshift));
@@ -255,14 +259,20 @@ function replotFrequency(handles)
     
   y = fft(plot_data); 
   n = length(plot_data); 
+  %determine the frequency values for the abcissa
   fshift = (-n/2:n/2-1)*(handles.Fs/n);
+  %shifts zero frequencies to the middle
   yshift = fftshift(y);
   [d,start] = min(abs(fshift-(-get(handles.start_frequency_edit,'Value'))));
   [d,stop] = min(abs(fshift-get(handles.start_frequency_edit,'Value')));
+  %select only the data that is selected by the user
   newF = fshift(start:stop);
   newFdata = yshift(start:stop);
+  %plot the new data, the division is needed to get the right amplitude
+  %value
   plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
   
+  %displays grid lines
   grid(handles.axes2,'on');
   
   
@@ -273,12 +283,16 @@ function replotFrequency(handles)
   
   %plot the inverse fft of the selected data
   if get(handles.filterPlot, 'Value') == 1
-      [d,start2] = min(abs(fshift-0));
-	  newFdata2 = yshift(start2:stop);
-      iNewData = ifft(newFdata2);
-      %iNewData = iNewData(mod(0:n-1, numel(iNewData)) + 1);
-	  x2 = handles.x1(start2:stop);
-      plot(handles.axes1,x2,iNewData);
+      %compose a boxcar function that will be used to select the needed
+      %frequency components
+      temp = zeros(1, start);
+      temp = [temp ones(1,stop-start)];
+      temp = [temp zeros(1, length(yshift)-stop)];
+      %select the frequencies you need
+      newFdata2 = yshift.*temp;
+      %fill the vector to the orignal length with zeros
+      iNewData = ifft(ifftshift(newFdata2));
+      plot(handles.axes1,handles.x1,iNewData);
   end;
   grid(handles.axes1,'on');
 
