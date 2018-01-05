@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 20-Dec-2017 17:04:17
+% Last Modified by GUIDE v2.5 05-Jan-2018 22:45:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -155,7 +155,6 @@ function load_Btn_Callback(hObject, eventdata, handles)
   handles.notesIndex = row_index;
   handles.method = num(row_index-2,2);
   handles.window = num(row_index-2,3);
-  handles.noise = num(row_index-2,4);
   if isnan(handles.method)
       handles.method = 1;
   end;
@@ -184,17 +183,21 @@ function load_Btn_Callback(hObject, eventdata, handles)
 function initPlot(hObject,handles)
   cla reset;
   data = handles.data;
+  %MAKE DATA PERIODIC
+  data = wextend('1D','per',data,length(data)*5-1);
   m = size(data);
   x1 = 0:1:(m(2)-1);
   %sets the right values on the time abcissa
   x1 = x1.*(1/handles.Fs);
+
+  %OLD WAY OF MAKING THE DATA PERIODIC
   %data = data(mod(0:(m(2)*10)-1, numel(data)) + 1);
   %x1 = x1(mod(0:(m(2)*10)-1, numel(x1)) + 1);
   
   %data used for tests(sine)
-  x1 = 0:1:1500;
-  x1 = x1.*(1/handles.Fs);
-  data = sin(2*pi*1*x1) + sin(2*pi*15*x1);
+  %x1 = 0:1:1500;
+  %x1 = x1.*(1/handles.Fs);
+  %data = sin(2*pi*1*x1) + sin(2*pi*15*x1)+sin(2*pi*30*x1) + sin(2*pi*100*x1);
   handles.data = data;
   handles.x1 = x1;
 
@@ -228,37 +231,32 @@ function replotFrequency(handles)
   switch windowFunction
 	case 1
 		% Normal (no window function)
+        window_data = plot_data;
     case 2
         %BOXCAR
-		%nfft = 2^nextpow2(n);
-		%box_data = handles.data.*rectwin(n);
-		%box_fft = fft(box_data,nfft)/n;
-		% at all frequencies except zero and the Nyquist
-		%mYdft = abs(box_fft);
-		%mYdft = mYdft (1:nfft/2+1);
-		%mYdft (2:end-1) = 2* mYdft(2:end-1);
-		%f = handles.Fs/2*linspace(0,1,nfft/2+1);
-		%plot(handles.axes2,f,mYdft);
+        hann_data = rectwin(length(plot_data));
+        window_data = transpose(hann_data).*plot_data;
 	case 3
 		%Hann
         hann_data = hann(length(plot_data));
-        plot_data = hann_data.*plot_data;
+        window_data = transpose(hann_data).*plot_data;
 	case 4
 		%Blackmann
         blackman_data = blackman(length(plot_data));
-        plot_data = blackman_data.*plot_data;
+        window_data = transpose(blackman_data).*plot_data;
 	case 5
 		%Hamming
         hamming_data = hamming(length(plot_data));
-        plot_data = hamming_data.*plot_data;
+        window_data = transpose(hamming_data).*plot_data;
 	case 6
 		%Bartlett
         bartlett_data = bartlett(length(plot_data));
-        plot_data = bartlett_data.*plot_data;
+        window_data = transpose(bartlett_data).*plot_data;
   end
-    
-  y = fft(plot_data); 
-  n = length(plot_data); 
+   
+  %PLOT FFT WITH WINDOW
+  y = fft(window_data); 
+  n = length(window_data); 
   %determine the frequency values for the abcissa
   fshift = (-n/2:n/2-1)*(handles.Fs/n);
   %shifts zero frequencies to the middle
@@ -270,29 +268,43 @@ function replotFrequency(handles)
   newFdata = yshift(start:stop);
   %plot the new data, the division is needed to get the right amplitude
   %value
-  plot(handles.axes2,newF,abs(newFdata./(length(newFdata)./2)));
+  plot(handles.axes2,newF,abs(newFdata./(length(handles.data)./2)));
   
   %displays grid lines
   grid(handles.axes2,'on');
-  
-  
+    
   cla reset
-  %plot time domain
+  %plot time domain without window
   set(handles.axes1_title,'String','Time Domain');
   plot(handles.axes1,handles.x1,handles.data);
   
   %plot the inverse fft of the selected data
   if get(handles.filterPlot, 'Value') == 1
-      %compose a boxcar function that will be used to select the needed
-      %frequency components
-      temp = zeros(1, start);
-      temp = [temp ones(1,stop-start)];
-      temp = [temp zeros(1, length(yshift)-stop)];
-      %select the frequencies you need
-      newFdata2 = yshift.*temp;
-      %fill the vector to the orignal length with zeros
-      iNewData = ifft(ifftshift(newFdata2));
-      plot(handles.axes1,handles.x1,iNewData);
+      y = fft(plot_data);
+      yshift = fftshift(y);
+      if get(handles.lowHighCheckbox, 'Value') == 0
+          %compose a boxcar function that will be used to select the needed
+          %frequency components
+          temp = zeros(1, start);
+          temp = [temp ones(1,stop-start)];
+          temp = [temp zeros(1, length(yshift)-stop)];
+          %select the frequencies you need
+          newFdata2 = yshift.*temp;
+          %fill the vector to the orignal length with zeros
+          iNewData = ifft(ifftshift(newFdata2));
+          plot(handles.axes1,handles.x1,iNewData);
+      else
+          %compose a boxcar function that will be used to select the needed
+          %frequency components
+          temp = ones(1, start);
+          temp = [temp zeros(1,stop-start)];
+          temp = [temp ones(1, length(yshift)-stop)];
+          %select the frequencies you need
+          newFdata2 = yshift.*temp;
+          %fill the vector to the orignal length with zeros
+          iNewData = ifft(ifftshift(newFdata2));
+          plot(handles.axes1,handles.x1,iNewData);
+      end;
   end;
   grid(handles.axes1,'on');
 
@@ -343,9 +355,8 @@ toSave(timeRow_index,2) = col2;
 %saves the options to the excel file
 toSave(handles.notesIndex,2) = num2cell(get(handles.options_popup,'value'));
 toSave(handles.notesIndex,3) = num2cell(get(handles.windowFunction_popup,'value'));
-toSave(handles.notesIndex,4) = num2cell(get(handles.noiseReduction_popup,'value'));
-toSave(handles.notesIndex,5) = num2cell(get(handles.start_frequency_edit,'value'));
-toSave(handles.notesIndex,6) = num2cell(get(handles.stop_frequency_edit,'value'));
+toSave(handles.notesIndex,4) = num2cell(get(handles.start_frequency_edit,'value'));
+toSave(handles.notesIndex,5) = num2cell(get(handles.stop_frequency_edit,'value'));
 %saves the data to the excel file
 xlswrite(fullName,toSave);
 
@@ -454,29 +465,6 @@ function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --- Executes on selection change in noiceReduction_popup.
-function noiseReduction_popup_Callback(hObject, eventdata, handles)
-% hObject    handle to noiceReduction_popup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns noiceReduction_popup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from noiceReduction_popup
-
-
-% --- Executes during object creation, after setting all properties.
-function noiseReduction_popup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to noiceReduction_popup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 % --- Executes on slider movement.
 function stop_frequency_edit_Callback(hObject, eventdata, handles)
 % hObject    handle to stop_frequency_edit (see GCBO)
@@ -574,3 +562,12 @@ function window_edit_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
+
+
+% --- Executes on button press in lowHighCheckbox.
+function lowHighCheckbox_Callback(hObject, eventdata, handles)
+% hObject    handle to lowHighCheckbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+replotFrequency(handles);
