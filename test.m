@@ -5,7 +5,7 @@ fs=f*10;
 
 % Read data from excel sheet
 x = transpose(xlsread('standing still eyes closed.xlsx', 'b12:b1400'));
-x = repmat(x,1,40);
+x = [x zeros(1,10000)];
 % Create time axis
 t = 0:1/fs:((1/fs)*(length(x)-1));
 
@@ -25,7 +25,7 @@ title('Base signal');
 grid on;
 
 % Window function
-x = x .* transpose(blackman(n));
+%x = x .* transpose(blackman(n));
 %x = x .* transpose(hann(n));
 %x = x .* transpose(hamming(n));
 %x = x .* transpose(rectwin(n));
