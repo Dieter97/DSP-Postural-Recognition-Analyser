@@ -371,11 +371,17 @@ end
 toSave(dataRow_index,2) = col1;
 toSave(timeRow_index,2) = col2;
 %saves the options to the excel file
-toSave(handles.notesIndex,2) = num2cell(get(handles.method,'value'));
+toSave(handles.notesIndex,2) = num2cell(handles.method);
 toSave(handles.notesIndex,3) = num2cell(get(handles.windowFunction_popup,'value'));
 toSave(handles.notesIndex,4) = num2cell(get(handles.start_frequency_edit,'value'));
-toSave(handles.notesIndex,5) = num2cell(get(handles.stop_frequency_edit,'value'));
+toSave(handles.notesIndex,5) = num2cell(get(handles.window_edit,'value'));
+toSave(handles.notesIndex,6) = num2cell(get(handles.filterPlot,'value'));
+toSave(handles.notesIndex,7) = num2cell(get(handles.lowHighCheckbox,'value'));
+
 %saves the data to the excel file
+for i = 1:length(handles.data)
+    toSave(12+i,1) = num2cell(handles.data(i));
+end
 xlswrite(fullName,toSave);
 
 % --- Executes on button press in method.
