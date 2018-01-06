@@ -200,7 +200,7 @@ function initPlot(hObject,handles)
   %zero_padded_data =[data zeros(1,length(data)*floor(get(handles.window_edit,'Value')))];
   
   %Calculate the DC component and remove this from the zero_padded_data
-  DCOffset = mean(zero_padded_data);
+  DCOffset = mean(data);
   handles.data = data;
   handles.x1 = x1;
   handles.zero_padded_data = zero_padded_data-DCOffset;
