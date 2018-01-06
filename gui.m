@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 05-Jan-2018 22:45:38
+% Last Modified by GUIDE v2.5 06-Jan-2018 15:20:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -184,22 +184,22 @@ function initPlot(hObject,handles)
   cla reset;
   data = handles.data;
   %MAKE DATA PERIODIC
-  data = wextend('1D','per',data,length(data)*5-1);
+  %data = wextend('1D','per',data,length(data)*2-1);
+  %Use zeropadded data to calculate fft, but not to plot the data!
+  zero_padded_data = [data zeros(1,length(data)*floor(get(handles.window_edit,'Value')))];
   m = size(data);
   x1 = 0:1:(m(2)-1);
   %sets the right values on the time abcissa
   x1 = x1.*(1/handles.Fs);
-
-  %OLD WAY OF MAKING THE DATA PERIODIC
-  %data = data(mod(0:(m(2)*10)-1, numel(data)) + 1);
-  %x1 = x1(mod(0:(m(2)*10)-1, numel(x1)) + 1);
   
   %data used for tests(sine)
   %x1 = 0:1:1500;
   %x1 = x1.*(1/handles.Fs);
   %data = sin(2*pi*1*x1) + sin(2*pi*15*x1)+sin(2*pi*30*x1) + sin(2*pi*100*x1);
+  %zero_padded_data =[data zeros(1,length(data)*floor(get(handles.window_edit,'Value')))];
   handles.data = data;
   handles.x1 = x1;
+  handles.zero_padded_data = zero_padded_data;
 
   %calculate fft
   y = fft(data);     
@@ -224,7 +224,7 @@ function initPlot(hObject,handles)
 function replotFrequency(handles)
   %calculate frequency domain
   set(handles.axes2_title,'String','Frequency Domain');
-  plot_data = handles.data;
+  plot_data = handles.zero_padded_data;
   
   %TODO switch for WINDOW FUNCTIONS
   windowFunction = get(handles.windowFunction_popup,'value');
@@ -268,7 +268,7 @@ function replotFrequency(handles)
   newFdata = yshift(start:stop);
   %plot the new data, the division is needed to get the right amplitude
   %value
-  plot(handles.axes2,newF,abs(newFdata./(length(handles.data)./2)));
+  plot(handles.axes2,newF,abs(newFdata./(length(handles.zero_padded_data)./2)));
   
   %displays grid lines
   grid(handles.axes2,'on');
@@ -280,8 +280,15 @@ function replotFrequency(handles)
   
   %plot the inverse fft of the selected data
   if get(handles.filterPlot, 'Value') == 1
-      y = fft(plot_data);
+      %Recalculate the fft of the not zeropadded data
+      y = fft(handles.data);
       yshift = fftshift(y);
+      n = length(handles.data); 
+      fshift = (-n/2:n/2-1)*(handles.Fs/n);
+      %Find the frequency on the not zero padded data
+      [d,start] = min(abs(fshift-(-get(handles.start_frequency_edit,'Value'))));
+      [d,stop] = min(abs(fshift-get(handles.start_frequency_edit,'Value')));
+      
       if get(handles.lowHighCheckbox, 'Value') == 0
           %compose a boxcar function that will be used to select the needed
           %frequency components
@@ -292,7 +299,7 @@ function replotFrequency(handles)
           newFdata2 = yshift.*temp;
           %fill the vector to the orignal length with zeros
           iNewData = ifft(ifftshift(newFdata2));
-          plot(handles.axes1,handles.x1,iNewData);
+          plot(handles.axes1,handles.x1,real(iNewData));
       else
           %compose a boxcar function that will be used to select the needed
           %frequency components
@@ -303,12 +310,10 @@ function replotFrequency(handles)
           newFdata2 = yshift.*temp;
           %fill the vector to the orignal length with zeros
           iNewData = ifft(ifftshift(newFdata2));
-          plot(handles.axes1,handles.x1,iNewData);
+          plot(handles.axes1,handles.x1,real(iNewData));
       end;
   end;
   grid(handles.axes1,'on');
-
-
 
 % --- Executes on button press in save_Btn.
 function save_Btn_Callback(hObject, eventdata, handles)
@@ -550,7 +555,8 @@ function window_edit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
+set(handles.window_field,'String',get(handles.window_edit,'Value'));
+initPlot(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
 function window_edit_CreateFcn(hObject, eventdata, handles)
@@ -562,7 +568,9 @@ function window_edit_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
-
+set(hObject, 'min', 0);
+set(hObject, 'max', 5);
+set(hObject, 'Value',0);
 
 % --- Executes on button press in lowHighCheckbox.
 function lowHighCheckbox_Callback(hObject, eventdata, handles)
