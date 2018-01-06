@@ -171,7 +171,7 @@ function load_Btn_Callback(hObject, eventdata, handles)
     num = xlsread(fullFileName,-1);
     [m,n] = size(num);
   end
-  handles.num = num-mean(num);
+  handles.num = num;
   %handles.num = detrend(num);
   handles.data = transpose(handles.num(:,1));
   % Save the handles
