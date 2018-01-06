@@ -195,8 +195,8 @@ function initPlot(hObject,handles)
   %data used for tests(sine)
   %x1 = 0:1:1500;
   %x1 = x1.*(1/handles.Fs);
-  %data = sin(2*pi*1*x1) + sin(2*pi*15*x1)+sin(2*pi*30*x1) + sin(2*pi*100*x1);
-  %zero_padded_data =[data zeros(1,length(data)*floor(get(handles.window_edit,'Value')))];
+  data = sin(2*pi*1*x1) + sin(2*pi*15*x1)+sin(2*pi*30*x1) + sin(2*pi*100*x1);
+  zero_padded_data =[data zeros(1,length(data)*floor(get(handles.window_edit,'Value')))];
   handles.data = data;
   handles.x1 = x1;
   handles.zero_padded_data = zero_padded_data;
@@ -268,7 +268,7 @@ function replotFrequency(handles)
   newFdata = yshift(start:stop);
   %plot the new data, the division is needed to get the right amplitude
   %value
-  plot(handles.axes2,newF,abs(newFdata./(length(handles.zero_padded_data)./2)));
+  plot(handles.axes2,newF,abs(newFdata./(n./2)));
   
   %displays grid lines
   grid(handles.axes2,'on');
