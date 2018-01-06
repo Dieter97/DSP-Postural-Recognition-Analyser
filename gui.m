@@ -196,11 +196,14 @@ function initPlot(hObject,handles)
   %data used for tests(sine)
   %x1 = 0:1:1500;
   %x1 = x1.*(1/handles.Fs);
-  %data = sin(2*pi*1*x1) + sin(2*pi*15*x1)+sin(2*pi*30*x1) + sin(2*pi*100*x1);
+  %data = sin(2*pi*1*x1) + sin(2*pi*15*x1)+sin(2*pi*30*x1) + sin(2*pi*100*x1)+3;
   %zero_padded_data =[data zeros(1,length(data)*floor(get(handles.window_edit,'Value')))];
+  
+  %Calculate the DC component and remove this from the zero_padded_data
+  DCOffset = mean(zero_padded_data);
   handles.data = data;
   handles.x1 = x1;
-  handles.zero_padded_data = zero_padded_data;
+  handles.zero_padded_data = zero_padded_data-DCOffset;
 
   %calculate fft
   y = fft(data);     
