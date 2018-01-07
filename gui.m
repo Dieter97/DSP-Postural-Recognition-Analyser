@@ -322,12 +322,18 @@ function replotFrequency(handles)
           end
       end
       grid(handles.axes1,'on');
+      xlabel(handles.axes1,'Time[s]');
+      ylabel(handles.axes1,'x(t)');
+      xlabel(handles.axes2,'Frequency[Hz]');
+      ylabel(handles.axes2,'Magnitude');
     end
     if handles.method == 2
         plot(handles.axes1,handles.x1,handles.data);
         grid(handles.axes1,'on');
         plot(handles.axes2,handles.x1,detrend(smooth(handles.data)));
         grid(handles.axes2,'on');
+        xlabel(handles.axes2,'Time[s]');
+        ylabel(handles.axes2,'x(t)');
     end
     
 
