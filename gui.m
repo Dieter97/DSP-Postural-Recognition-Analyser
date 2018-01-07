@@ -60,6 +60,7 @@ handles.window = 1;
 handles.noise = 1;
 % Sample frequency
 handles.Fs = 250;
+handles.initialize = 0;
 % Update handles structure
 guidata(hObject, handles);
 
@@ -132,6 +133,7 @@ function load_Btn_Callback(hObject, eventdata, handles)
   fullFileName = fullfile(folder, baseName);
   % Open xlsx file and save data in num (only numbers), txt (only strings)
   % and raw (raw data)
+  handles.initialize = 0;
   [num,txt,raw] = xlsread(fullFileName);
   handles.txt = txt;
   handles.raw = raw;
@@ -141,28 +143,41 @@ function load_Btn_Callback(hObject, eventdata, handles)
   for i = 1:m
       if cell2mat(notes_index(i,1)) == 1
           row_index = i;
-      end;
-  end;
+      end
+  end
   % search for row index of TRAJECTORIES (sampling frequency is located a row under this)
   tr_index = strfind(txt, 'TRAJECTORIES');
   [m,n] = size(tr_index);
   for i = 1:m
       if cell2mat(tr_index(i,1)) == 1
           sampling_index = i;
-      end;
-  end;
+      end
+  end
   handles.Fs = num(sampling_index-1,1);
   handles.notesIndex = row_index;
   handles.method = num(row_index-2,2);
   handles.window = num(row_index-2,3);
+  handles.frecuency = num(row_index-2,4);
+  handles.wd = num(row_index-2,5);
+  handles.fp = num(row_index-2,6);
+  handles.lhc = num(row_index-2,7);
   if isnan(handles.method)
       handles.method = 1;
-  end;
+  end
   if isnan(handles.window)
       handles.window = 1;
   end
-  if isnan(handles.noise)
-      handles.noise = 1;
+  if isnan(handles.frecuency)
+      handles.frecuency = 0;
+  end
+  if isnan(handles.wd)
+      handles.wd = 1;
+  end
+  if isnan(handles.fp)
+      handles.fp = 1;
+  end
+  if isnan(handles.lhc)
+      handles.lhc = 1;
   end
   num = xlsread(fullFileName,-1);
   [m,n] = size(num);
@@ -178,6 +193,7 @@ function load_Btn_Callback(hObject, eventdata, handles)
   guidata(hObject, handles);
   % plot the data
   initPlot(hObject,handles);
+    
 
 %Calculates the time values, frequency values of the FFT plot and
 % initiliazes the sliders
@@ -221,6 +237,17 @@ function initPlot(hObject,handles)
   set(handles.stop_frequency_field,'String',max(fshift));
   % Save the handles
   guidata(hObject, handles);
+  
+  if handles.initialize == 0
+      %set(handles.method, 'Value', handles.method);
+      set(handles.windowFunction_popup, 'Value', handles.window);
+      set(handles.start_frequency_edit, 'Value', handles.frecuency);
+      set(handles.window_edit,'value', handles.wd);
+      set(handles.filterPlot,'value', handles.fp);
+      set(handles.lowHighCheckbox,'value', handles.lhc);
+      handles.initialize = 1;
+      guidata(hObject, handles);
+  end
   
   replotFrequency(handles);
   
