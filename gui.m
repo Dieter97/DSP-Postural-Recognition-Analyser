@@ -272,9 +272,9 @@ function replotFrequency(handles)
       newFdata = yshift(start:stop);
       %plot the new data, the division is needed to get the right amplitude
       %value
-      plot(handles.axes2,newF,abs(newFdata./n),'s');
+      plot(handles.axes2,newF,abs(newFdata./length(handles.data)),'s');
       hold(handles.axes2,'on');
-      plot(handles.axes2,newF,abs(newFdata./n),'k');
+      plot(handles.axes2,newF,abs(newFdata./length(handles.data)),'k');
       hold(handles.axes2,'off');
 
       %displays grid lines
