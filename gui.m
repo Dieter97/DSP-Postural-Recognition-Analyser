@@ -242,6 +242,7 @@ function initPlot(hObject,handles)
       %set(handles.method, 'Value', handles.method);
       set(handles.windowFunction_popup, 'Value', handles.window);
       set(handles.start_frequency_edit, 'Value', handles.frecuency);
+      set(handles.start_frequency_field,'String',handles.frecuency);
       set(handles.window_edit,'value', handles.wd);
       set(handles.filterPlot,'value', handles.fp);
       set(handles.lowHighCheckbox,'value', handles.lhc);
