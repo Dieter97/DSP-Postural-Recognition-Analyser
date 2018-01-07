@@ -184,15 +184,11 @@ function load_Btn_Callback(hObject, eventdata, handles)
 function initPlot(hObject,handles)
   cla reset;
   data = handles.data;
-  %MAKE DATA PERIODIC
-  %data = wextend('1D','per',data,length(data)*2-1);
-  %Use zeropadded data to calculate fft, but not to plot the data!
-  zero_padded_data = [data zeros(1,length(data)*floor(get(handles.window_edit,'Value')))];
+  
   m = size(data);
   x1 = 0:1:(m(2)-1);
   %sets the right values on the time abcissa
   x1 = x1.*(1/handles.Fs);
-  
   %data used for tests(sine)
   %x1 = 0:1:1500;
   %x1 = x1.*(1/handles.Fs);
@@ -201,9 +197,12 @@ function initPlot(hObject,handles)
   
   %Calculate the DC component and remove this from the zero_padded_data
   DCOffset = mean(data);
+  %Adjust data to desired window length using zero padding
+  %Use zeropadded data to calculate fft, but not to plot the data!
+  zero_padded_data = [data-DCOffset zeros(1,length(data)*floor(get(handles.window_edit,'Value')))];
   handles.data = data;
   handles.x1 = x1;
-  handles.zero_padded_data = zero_padded_data-DCOffset;
+  handles.zero_padded_data = zero_padded_data;
 
   %calculate fft
   y = fft(data);     
