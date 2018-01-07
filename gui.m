@@ -227,7 +227,6 @@ function initPlot(hObject,handles)
 function replotFrequency(handles)
     if handles.method == 1
       %calculate frequency domain
-      set(handles.axes2_title,'String','Frequency Domain');
       plot_data = handles.zero_padded_data;
 
       %TODO switch for WINDOW FUNCTIONS
@@ -259,6 +258,7 @@ function replotFrequency(handles)
       end
 
       %PLOT FFT WITH WINDOW
+      set(handles.axes2_title,'String','Frequency Domain');
       y = fft(window_data); 
       n = length(window_data); 
       %determine the frequency values for the abcissa
@@ -325,6 +325,7 @@ function replotFrequency(handles)
       ylabel(handles.axes2,'Magnitude');
     end
     if handles.method == 2
+        set(handles.axes2_title,'String','Smoothed Time Domain');
         plot(handles.axes1,handles.x1,handles.data);
         grid(handles.axes1,'on');
         plot(handles.axes2,handles.x1,detrend(smooth(handles.data)));
