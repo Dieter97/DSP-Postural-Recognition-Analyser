@@ -322,8 +322,6 @@ function replotFrequency(handles)
           end
       end
       grid(handles.axes1,'on');
-      xlabel(handles.axes1,'Time[s]');
-      ylabel(handles.axes1,'x(t)');
       xlabel(handles.axes2,'Frequency[Hz]');
       ylabel(handles.axes2,'Magnitude');
     end
@@ -335,6 +333,9 @@ function replotFrequency(handles)
         xlabel(handles.axes2,'Time[s]');
         ylabel(handles.axes2,'x(t)');
     end
+    
+    xlabel(handles.axes1,'Time[s]');
+    ylabel(handles.axes1,'x(t)');
     
 
 % --- Executes on button press in save_Btn.
