@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 06-Jan-2018 20:29:45
+% Last Modified by GUIDE v2.5 07-Jan-2018 19:53:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,12 +54,12 @@ function gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for gui
 handles.output = hObject;
 
-% Settings: method, window and noise
-handles.method = 1;
+% Settings: method, window 
+handles.m = 1;
 handles.window = 1;
-handles.noise = 1;
 % Sample frequency
 handles.Fs = 250;
+handles.initialize = 0;
 % Update handles structure
 guidata(hObject, handles);
 
@@ -132,6 +132,7 @@ function load_Btn_Callback(hObject, eventdata, handles)
   fullFileName = fullfile(folder, baseName);
   % Open xlsx file and save data in num (only numbers), txt (only strings)
   % and raw (raw data)
+  handles.initialize = 0;
   [num,txt,raw] = xlsread(fullFileName);
   handles.txt = txt;
   handles.raw = raw;
@@ -141,29 +142,43 @@ function load_Btn_Callback(hObject, eventdata, handles)
   for i = 1:m
       if cell2mat(notes_index(i,1)) == 1
           row_index = i;
-      end;
-  end;
+      end
+  end
   % search for row index of TRAJECTORIES (sampling frequency is located a row under this)
   tr_index = strfind(txt, 'TRAJECTORIES');
   [m,n] = size(tr_index);
   for i = 1:m
       if cell2mat(tr_index(i,1)) == 1
           sampling_index = i;
-      end;
-  end;
+      end
+  end
   handles.Fs = num(sampling_index-1,1);
   handles.notesIndex = row_index;
-  handles.method = num(row_index-2,2);
+  handles.m = num(row_index-2,2);
   handles.window = num(row_index-2,3);
-  if isnan(handles.method)
-      handles.method = 1;
-  end;
+  handles.frequency = num(row_index-2,4);
+  handles.wd = num(row_index-2,5);
+  handles.fp = num(row_index-2,6);
+  handles.lhc = num(row_index-2,7);
+  if isnan(handles.m)
+      handles.m = 1;
+  end
   if isnan(handles.window)
       handles.window = 1;
   end
-  if isnan(handles.noise)
-      handles.noise = 1;
+  if isnan(handles.frequency)
+      handles.frequency = -1;
   end
+  if isnan(handles.wd)
+      handles.wd = 0;
+  end
+  if isnan(handles.fp)
+      handles.fp = 0;
+  end
+  if isnan(handles.lhc)
+      handles.lhc = 0;
+  end
+  %opens excel to choose data
   num = xlsread(fullFileName,-1);
   [m,n] = size(num);
   while n ~= 1
@@ -172,17 +187,18 @@ function load_Btn_Callback(hObject, eventdata, handles)
     [m,n] = size(num);
   end
   handles.num = num;
-  %handles.num = detrend(num);
   handles.data = transpose(handles.num(:,1));
   % Save the handles
   guidata(hObject, handles);
   % plot the data
   initPlot(hObject,handles);
+    
 
 %Calculates the time values, frequency values of the FFT plot and
 % initiliazes the sliders
 function initPlot(hObject,handles)
   cla reset;
+  
   data = handles.data;
   
   m = size(data);
@@ -194,6 +210,43 @@ function initPlot(hObject,handles)
   %x1 = x1.*(1/handles.Fs);
   %data = sin(2*pi*1*x1) + sin(2*pi*15*x1)+sin(2*pi*30*x1) + sin(2*pi*100*x1)+3;
   %zero_padded_data =[data zeros(1,length(data)*floor(get(handles.window_edit,'Value')))];
+   
+  %calculate fft
+  y = fft(data);     
+  n = length(data);   
+  %make sure that the spectrum is symmetrical around the zero point
+  fshift = (-n/2:n/2-1)*(handles.Fs/n);
+  
+  %initiliazes the options
+  if handles.initialize == 0      
+      %if the frequency wasn't read from the excel file or if the frequency
+      %is higher than the freq bounds of the signal init the frequency
+      set(handles.start_frequency_edit, 'min', 0);
+      set(handles.start_frequency_edit, 'max', max(fshift));
+      if handles.frequency == -1 || handles.frequency > max(fshift)
+          handles.frequency = max(fshift);
+      end
+      set(handles.method, 'Value', handles.m);
+      set(handles.windowFunction_popup, 'Value', handles.window);
+      set(handles.start_frequency_edit, 'Value', handles.frequency);
+      set(handles.start_frequency_field,'String',handles.frequency);
+      set(handles.window_edit,'value', handles.wd);
+      set(handles.window_field,'String',handles.wd);
+      set(handles.filterPlot,'value', handles.fp);
+      set(handles.lowHighCheckbox,'value', handles.lhc);
+      handles.initialize = 1;
+      guidata(hObject, handles);
+  else
+       %sets default settings to the options
+  set(handles.start_frequency_edit, 'min', 0);
+  set(handles.start_frequency_edit, 'max', max(fshift));
+  set(handles.start_frequency_edit, 'Value',max(fshift));
+  set(handles.start_frequency_field,'String',max(fshift));
+  set(handles.stop_frequency_edit, 'min', 0);
+  set(handles.stop_frequency_edit, 'max', max(fshift));
+  set(handles.stop_frequency_edit, 'Value', max(fshift));
+  set(handles.stop_frequency_field,'String',max(fshift));
+  end
   
   %Calculate the DC component and remove this from the zero_padded_data
   DCOffset = mean(data);
@@ -203,29 +256,13 @@ function initPlot(hObject,handles)
   handles.data = data;
   handles.x1 = x1;
   handles.zero_padded_data = zero_padded_data;
-
-  %calculate fft
-  y = fft(data);     
-  n = length(data);   
-  %make sure that the spectrum is symmetrical around the zero point
-  fshift = (-n/2:n/2-1)*(handles.Fs/n);
-  
-  %sets default settings to the options
-  set(handles.start_frequency_edit, 'min', 0);
-  set(handles.start_frequency_edit, 'max', max(fshift));
-  set(handles.start_frequency_edit, 'Value',max(fshift));
-  set(handles.start_frequency_field,'String',max(fshift));
-  set(handles.stop_frequency_edit, 'min', 0);
-  set(handles.stop_frequency_edit, 'max', max(fshift));
-  set(handles.stop_frequency_edit, 'Value', max(fshift));
-  set(handles.stop_frequency_field,'String',max(fshift));
   % Save the handles
   guidata(hObject, handles);
-  
+ 
   replotFrequency(handles);
   
 function replotFrequency(handles)
-    if handles.method == 1
+    if handles.m == 1
       %calculate frequency domain
       plot_data = handles.zero_padded_data;
 
@@ -324,7 +361,7 @@ function replotFrequency(handles)
       xlabel(handles.axes2,'Frequency[Hz]');
       ylabel(handles.axes2,'Magnitude');
     end
-    if handles.method == 2
+    if handles.m == 2
         set(handles.axes2_title,'String','Smoothed Time Domain');
         plot(handles.axes1,handles.x1,handles.data);
         grid(handles.axes1,'on');
@@ -381,7 +418,7 @@ end
 toSave(dataRow_index,2) = col1;
 toSave(timeRow_index,2) = col2;
 %saves the options to the excel file
-toSave(handles.notesIndex,2) = num2cell(handles.method);
+toSave(handles.notesIndex,2) = num2cell(handles.m);
 toSave(handles.notesIndex,3) = num2cell(get(handles.windowFunction_popup,'value'));
 toSave(handles.notesIndex,4) = num2cell(get(handles.start_frequency_edit,'value'));
 toSave(handles.notesIndex,5) = num2cell(get(handles.window_edit,'value'));
@@ -390,7 +427,7 @@ toSave(handles.notesIndex,7) = num2cell(get(handles.lowHighCheckbox,'value'));
 
 %saves the data to the excel file
 for i = 1:length(handles.data)
-    toSave(12+i,1) = num2cell(handles.data(i));
+    toSave(12+i,8) = num2cell(handles.data(i));
 end
 xlswrite(fullName,toSave);
 
@@ -399,7 +436,7 @@ function method_Callback(hObject, eventdata, handles)
 % hObject    handle to method (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.method = get(hObject,'value');
+handles.m = get(hObject,'value');
 guidata(hObject, handles);
 replotFrequency(handles);
 
@@ -544,6 +581,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 set(hObject,'String',{'FFT','Smoothing'});
+handles.method = hObject ;
+  guidata(hObject, handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function start_frequency_edit_CreateFcn(hObject, eventdata, handles)
